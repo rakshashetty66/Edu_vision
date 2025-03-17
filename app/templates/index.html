@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h2 class="text-center mb-0">EduVision: Simplified Lecture Notes Organizer</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead text-center">Upload lecture notes images and convert them to searchable text using OCR.</p>
+
+                <form action="{{ url_for('main.upload_file') }}" method="post" enctype="multipart/form-data" class="mt-4">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select image file:</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".jpg,.jpeg,.png,.gif,.pdf" required>
+                        <div class="form-text">Supported formats: JPG, PNG, GIF, PDF</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Process Image</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h3 class="mb-0">Key Features</h3>
+            </div>
+            <div class="card-body">
+                <ul class="feature-list">
+                    <li><strong>Image-to-Text Conversion:</strong> Using Tesseract or Google Vision API</li>
+                    <li><strong>Semantic Tagging:</strong> Automatic organization of content</li>
+                    <li><strong>Search Functionality:</strong> Find keywords in your notes</li>
+                    <li><strong>Easy Upload:</strong> Simple interface for quick processing</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

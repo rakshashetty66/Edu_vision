@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Results - {{ result.filename }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Original Image</h4>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ result.file_path }}" alt="Uploaded image" class="img-fluid mb-2 border rounded">
+                <p class="text-muted">Filename: {{ result.filename }}</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Search Notes</h4>
+            </div>
+            <div class="card-body">
+                <form id="searchForm">
+                    <div class="input-group mb-3">
+                        <input type="text" id="searchQuery" class="form-control" placeholder="Enter keyword...">
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                </form>
+                <div id="searchResults" class="mt-3"></div>
+
+                <input type="hidden" id="textContent" value="{{ result.text }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center"><h4 class="mb-0">Extracted Text</h4>
+                <div>
+                    <button class="btn btn-sm btn-outline-dark me-2" id="viewRaw">Raw Text</button>
+                    <button class="btn btn-sm btn-outline-dark" id="viewTagged">Tagged View</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="rawTextView">{{ result.text|replace('\n', '<br>')|safe }}</div>
+                <div id="taggedTextView" style="display: none;">{{ result.tagged_text|safe }}</div>
+
+                <div class="mt-4">
+                    <button class="btn btn-success" id="copyText">Copy Text</button>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary ms-2">Process Another Image</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const rawTextView = document.getElementById('rawTextView');
+        const taggedTextView = document.getElementById('taggedTextView');
+        const viewRawBtn = document.getElementById('viewRaw');
+        const viewTaggedBtn = document.getElementById('viewTagged');
+        const copyTextBtn = document.getElementById('copyText');
+        const searchForm = document.getElementById('searchForm');
+        const searchQuery = document.getElementById('searchQuery');
+        const searchResults = document.getElementById('searchResults');
+        const textContent = document.getElementById('textContent').value;
+
+        // View switching
+        viewRawBtn.addEventListener('click', function() {
+            rawTextView.style.display = 'block';
+            taggedTextView.style.display = 'none';
+            viewRawBtn.classList.add('active');
+            viewTaggedBtn.classList.remove('active');
+        });
+
+        viewTaggedBtn.addEventListener('click', function() {
+            rawTextView.style.display = 'none';
+            taggedTextView.style.display = 'block';
+            viewTaggedBtn.classList.add('active');
+            viewRawBtn.classList.remove('active');
+        });
+
+        // Copy text functionality
+        copyTextBtn.addEventListener('click', function() {
+            navigator.clipboard.writeText(textContent).then(function() {
+                alert('Text copied to clipboard!');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+
+        // Search functionality
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const query = searchQuery.value.trim();
+            if (!query) {
+                searchResults.innerHTML = '<div class="alert alert-warning">Please enter a search term</div>';
+                return;
+            }
+
+            fetch('{{ url_for("main.search") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'query': query,
+                    'text_content': textContent
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.found) {
+                    searchResults.innerHTML = `
+                        <div class="alert alert-success">
+                            Found ${data.count} occurrence(s) of "${query}"
+                        </div>
+                    `;
+
+                    // Highlight occurrences in raw view
+                    let highlightedText = textContent;
+                    const positions = data.positions.sort((a, b) => b[0] - a[0]); // Sort in reverse
+
+                    positions.forEach(pos => {
+                        const [start, end] = pos;
+                        highlightedText =
+                            highlightedText.substring(0, start) +
+                            '<mark>' + highlightedText.substring(start, end) + '</mark>' +
+                            highlightedText.substring(end);
+                    });
+
+                    rawTextView.innerHTML = highlightedText.replace(/\n/g, '<br>');
+
+                    // Switch to raw view
+                    rawTextView.style.display = 'block';
+                    taggedTextView.style.display = 'none';
+                    viewRawBtn.classList.add('active');
+                    viewTaggedBtn.classList.remove('active');
+                } else {
+                    searchResults.innerHTML = `
+                        <div class="alert alert-danger">
+                            No matches found for "${query}"
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                searchResults.innerHTML = '<div class="alert alert-danger">An error occurred during search</div>';
+            });
+        });
+    });
+</script>
+{% endblock %}
