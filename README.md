@@ -96,10 +96,10 @@ http://127.0.0.1:5000/
 ### Home Page  
 <img src="app/static/images/home.png" alt="Home Page" width="500">
 
-### Dashboard Page 
+### Dashboard Page - Raw Text
 <img src="app/static/images/dashboard_raw.png" alt="Home Page" width="500"> 
 
-### Dashboard Page 
+### Dashboard Page - Tagged View
 <img src="app/static/images/dashboard_tagged.png" alt="Home Page" width="500">
 
 ---
