@@ -58,7 +58,7 @@ Edu_Vision/
 1. **Clone the Repository**  
 ```sh
 git clone https://github.com/rakshashetty66/Edu_Vision.git
-cd EduVision
+cd Edu_Vision
 ```
 
 2. **Create Virtual Environment (Optional but Recommended)**  
